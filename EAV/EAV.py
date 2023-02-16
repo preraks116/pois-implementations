@@ -147,8 +147,9 @@ class Eavesdrop:
 
 # Expansion factor - is set while encryption
 # If the message has spaces then scheme breaks
-eav = Eavesdrop(2, 2, 0, 2, 5)
-message = "canthandlespaces"
-enc = eav.enc(message)
-dec = eav.dec(enc)
-print(dec)
+if __name__ == '__main__':
+    eav = Eavesdrop(2, 2, 0, 2, 5)
+    message = "canthandlespaces"
+    enc = eav.enc(message)
+    dec = eav.dec(enc)
+    print(dec)
