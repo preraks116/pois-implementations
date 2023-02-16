@@ -115,6 +115,6 @@ class PRF:
                 cur = binaryToDecimal(y)
                 print("y is", y)
             print("-----")
-        return decimalToBinary(cur).zfill(self.security_parameter)
+        return cur
 
 print(PRF(2,2,5,3).evaluate(2))
