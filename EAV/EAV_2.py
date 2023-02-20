@@ -120,9 +120,9 @@ class Eavesdrop:
 
         return dec_message
 
-message = "1000101"
-print(Eavesdrop(7,16,7,21,59).dec(
-    Eavesdrop(7,16,7,21,59).enc(message)
-)
-== message
-)
+# message = "1000101"
+# n, k, l, g, p = 7, 16, 7, 21, 59
+message = "10101001"
+n, k, l, g, p = 8, 156, 8, 71, 599
+eav = Eavesdrop(n,k,l,g,p)
+print(eav.dec(eav.enc(message)) == message)
