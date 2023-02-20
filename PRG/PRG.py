@@ -15,11 +15,10 @@ def msb(num):
     return str(num)[0]
 
 def hcp(num,p):
-    if num>p/2:
-        return 1
+    if num< (p-1)/2:
+        return 0
     else:
-        return 0 
-
+        return 1 
 
 class PRG:
     def __init__(self, security_parameter: int, generator: int,
@@ -49,18 +48,10 @@ class PRG:
         extras = ""
         cur = seed 
         for i in range(self.expansion_factor):
-            # calculate hcp of cur and store in extras 
-            h = hcp(cur, self.prime_field)
-            # print("hcp at i = ", i, " is ", h)
-            extras += str(h)
-            # print("extras at i = ", i, " is ", extras)
-            # calculate one way function of cur and store in cur
             cur = dlp(self.generator, cur, self.prime_field)
-            # print("cur at i = ", i, " is ", cur, decimalToBinary(cur))
-            # print("------------------")
-        # final output would be cur concatenated with extras
-        output = str(decimalToBinary(cur).zfill(self.security_parameter)) + extras
-        return output
-
+            h = hcp(seed, self.prime_field)
+            seed = cur
+            extras += str(h)
+        return extras
 print(PRG(2, 2, 5, 5).generate(2))
         
