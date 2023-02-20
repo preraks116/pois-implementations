@@ -15,7 +15,7 @@ def msb(num):
     return str(num)[0]
 
 def hcp(num,p):
-    if num< (p-1)/2:
+    if num < (p-1)/2:
         return 0
     else:
         return 1 
@@ -53,5 +53,5 @@ class PRG:
             seed = cur
             extras += str(h)
         return extras
-print(PRG(2, 2, 5, 5).generate(2))
-        
+
+print(PRG(12,11,29,33).generate(1058))

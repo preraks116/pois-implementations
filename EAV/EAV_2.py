@@ -20,14 +20,12 @@ def hcp(num,p):
     else:
         return 1 
 
-# check once ##########
 def toInt(num):
     num = str(num)
     ans = 0
     for i in num:
         ans = (ans << 1) + int(i)
     return ans
-#######################
 
 class PRG:
     def __init__(self, security_parameter: int, generator: int,
@@ -59,9 +57,8 @@ class PRG:
         for i in range(self.expansion_factor):
             cur = dlp(self.generator, cur, self.prime_field)
             h = hcp(seed, self.prime_field)
-            seed = cur 
+            seed = cur
             extras += str(h)
-        print("extras is",extras)
         return extras
 
 class Eavesdrop:
@@ -96,29 +93,15 @@ class Eavesdrop:
         # get the prg output on the key
         prg_output = self.prg.generate(self.key)
         new_key = int(prg_output, 2)
-        # print("prg_output is ", prg_output)
-        # print("new_key is ", new_key)
 
-        # convert message to binary
-        # m = int(message, 2)
-        string = ''.join(format(x, 'b') for x in bytearray(message, 'utf-8'))
         # convert string to int
-        m = int(string, 2) 
-        # store length of message in l
+        m = int(message, 2) 
 
-        l = len(string)
-        # print("l is ", l)
+        e = m ^ new_key
+        enc_message = decimalToBinary(e).zfill(self.security_parameter)
+        # zfill just in case 
+        return enc_message
 
-        ##############################
-        self.expansion_factor = l
-        ##############################
-
-        # print("string is ", string)
-        # print("m is ", m)
-
-        enc_message = m ^ new_key
-        # print("enc_message is ", enc_message)
-        return decimalToBinary(enc_message).zfill(self.security_parameter)
 
     def dec(self, cipher: str) -> str:
         """
@@ -129,27 +112,17 @@ class Eavesdrop:
         # get the prg output on the key
         prg_output = self.prg.generate(self.key)
         new_key = int(prg_output, 2)
-        # print("prg_output is ", prg_output)
-        # print("new_key is ", new_key)
 
         cipher_text = int(cipher, 2)
-        # print("cipher_text is ", cipher_text)
 
-        d = str(decimalToBinary(cipher_text ^ new_key))
-        # print("dec_message is ", d)
-
-        u = [d[i:i+7] for i in range(0,len(d), 7)]
-        dec_message = ''.join(chr(toInt(int(x))) for x in u)
+        d = cipher_text ^ new_key
+        dec_message = str(decimalToBinary(d))
 
         return dec_message
 
-
-
-# Expansion factor - is set while encryption
-# If the message has spaces then scheme breaks
-if __name__ == '__main__':
-    eav = Eavesdrop(2, 2, 0, 2, 5)
-    message = "canthandlespaces"
-    enc = eav.enc(message)
-    # dec = eav.dec(enc)
-    # print(dec)
+message = "1000101"
+print(Eavesdrop(7,16,7,21,59).dec(
+    Eavesdrop(7,16,7,21,59).enc(message)
+)
+== message
+)
