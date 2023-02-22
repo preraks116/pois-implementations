@@ -48,11 +48,13 @@ class PRG:
         extras = ""
         cur = seed 
         for i in range(self.expansion_factor):
+            # calculating the output of DLP with x as the previous output
             cur = dlp(self.generator, cur, self.prime_field)
+
+            # calculating the HCP
             h = hcp(seed, self.prime_field)
             seed = cur
+            
+            # appending the HCP to the output
             extras += str(h)
         return extras
-
-if __name__ == "__main__":
-    print(PRG(12,11,29,33).generate(1058))

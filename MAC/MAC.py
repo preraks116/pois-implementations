@@ -51,15 +51,16 @@ class MAC:
 
         # for i = 1 to d, compute the t_i = F_k( r || d || i || m_i ) where || denotes concatenation
         t = []
-        tag = bin_r
         for i in range(d):
             bin_i = decimalToBinary(i+1).zfill(n_dash)
-            
+            # getting the message block
             block = message[i*(n_dash):(i+1)*(n_dash)]
-            
-            x = binaryToDecimal(bin_r + bin_d + bin_i + block)
 
+            x = binaryToDecimal(bin_r + bin_d + bin_i + block)
+            # calculating t_i
             t_i = self.prf.evaluate(x)
+
+            # appending t_i to the list of tags
             t.append(t_i)
 
         # concatenate r and all the t_i's to form t 
@@ -79,29 +80,11 @@ class MAC:
         pass
         n_dash = self.security_parameter//4
 
+        # extract random seed from the tag
         r = tag[:n_dash]
 
+        # getting the tag of the input message with the same random seed
         tag_prime = self.mac(message, binaryToDecimal(r))
         
+        # if the tags are same return true else return false
         return (tag == tag_prime)
-
-if __name__ == "__main__":
-    # n, p, g, s = 16, 499, 145, 179
-    # message = "100001011111"
-    # r = 13
-    # tag = "1101000000000000000000000000000000000000000000000000"
-
-    # n, p, g, s = 12, 107, 39, 120
-    # message = "110101"
-    # r = 2
-    # tag = "010111101010000000001100101"
-
-    n, p, g, s = 20, 137, 45, 87
-    message = "010011001000110"
-    r = 7
-    tag = "00111110100000000111010001100010110101110100110000011101000000001"
-
-
-    mac = MAC(n, p, g, s)
-    print(mac.mac(message, r) == tag)
-    print(mac.vrfy(message, tag))

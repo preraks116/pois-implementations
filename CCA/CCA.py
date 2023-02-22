@@ -93,22 +93,3 @@ class CCA:
             return message
         else:
             return None
-
-
-# n, p, g, key_cpa, key_mac_1, key_mac_2, cpa_random_seed = 7, 41, 17, 34, 10, 9, 12
-# message = "101110101011101000011"
-# enc = "00011001101101110010110000101111011"
-
-# n, p, g, key_cpa, key_mac_1, key_mac_2, cpa_random_seed = 9, 149, 45, 41, 11, 23, 10
-# message = "010011110000100110101110001100000010010000111"
-# enc = "000001010010011110010000000010011110100110010010000111000000000"
-
-n, p, g, key_cpa, key_mac_1, key_mac_2, cpa_random_seed = 6, 17, 7, 5, 17, 3, 18
-message = "000101001000110010100110000000010100"
-enc = "010010101000111101001011001011011110101010111100"
-
-mac_keys = [key_mac_1, key_mac_2]
-cca = CCA(n, p, g, key_cpa, mac_keys)
-
-print(cca.enc(message, cpa_random_seed) == enc)
-print(cca.dec(enc) == message)

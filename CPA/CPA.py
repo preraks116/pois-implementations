@@ -42,17 +42,28 @@ class CPA:
         self.prf = PRF(security_parameter, generator, prime_field, key)
 
     def blockEval(self, message: str, random_seed: int) -> str:
+        """
+        Evaluates the message in blocks of security parameter
+        """
         output = ""
         for i in range(0, len(message), self.security_parameter):
+            # extracting ith message block
             block = message[i:i+self.security_parameter]
             deci_block = binaryToDecimal(block)
 
+            # calculating the value of the random counter which will be the seed for the PRF
             r_i = random_seed + 1 + (i)//self.security_parameter 
+
+            # evaluating the PRF
             prf_output = self.prf.evaluate(r_i)
 
+            # XORing the block with the output of the PRF
             out = deci_block ^ prf_output
 
+            # converting the output to binary
             enc_block = decimalToBinary(out).zfill(self.security_parameter)
+            
+            # appending the block to the output
             output += enc_block
         return output
 
@@ -67,6 +78,7 @@ class CPA:
         # convert the random seed to binary 
         r = decimalToBinary(random_seed).zfill(self.security_parameter)
 
+        # using the blockEval function to evaluate the message in blocks
         enc_message = self.blockEval(message, random_seed)
 
         output = r + enc_message
@@ -78,32 +90,13 @@ class CPA:
         :param cipher: ciphertext c
         :type cipher: str
         """
+        # extracting the random seed from the cipher
         r = cipher[:self.security_parameter]
+
+        # extracting the encrypted message from the cipher
         enc_message = cipher[self.security_parameter:]
 
         # evaluating in blocks
         dec_message = self.blockEval(enc_message, binaryToDecimal(r))
-        return dec_message
-
         
-if __name__ == "__main__":
-    # n, p, g, k = 4, 307, 112, 58
-    # message = "1010100011100111"
-    # enc = "01001100100011100100"
-    # r = 4
-
-    # n, p, g, k = 5, 599, 189, 145
-    # message = "11100011011110010111"
-    # # 851503
-    # enc = "0011111001111111000101111"
-    # r = 7
-
-    n, p, g, k = 8, 11, 3, 15
-    message = "1010100110110111"
-    enc = "000010001000110110100101"
-    r = 8
-
-    cpa = CPA(n, p, g, k)
-
-    print(cpa.enc(message, r) == enc)
-    print(cpa.dec(enc) == message)
+        return dec_message

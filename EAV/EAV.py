@@ -35,6 +35,8 @@ class Eavesdrop:
         :param message: message encoded as bit-string
         :type message: str
         """
+        # Here the encryption scheme is One Time Pad using PRG
+        
         # get the prg output on the key
         prg_output = self.prg.generate(self.key)
         new_key = int(prg_output, 2)
@@ -42,7 +44,10 @@ class Eavesdrop:
         # convert string to int
         m = int(message, 2) 
 
+        # getting the encrypted message by XORing the message with the key
         e = m ^ new_key
+
+        # convert the encrypted message to binary and zero padding 
         enc_message = decimalToBinary(e).zfill(self.security_parameter)
         # zfill just in case 
         return enc_message
@@ -56,21 +61,16 @@ class Eavesdrop:
         """
         # get the prg output on the key
         prg_output = self.prg.generate(self.key)
+        
+        # converting key to binary
         new_key = int(prg_output, 2)
 
         cipher_text = int(cipher, 2)
 
+        # getting the decrypted message by XORing the cipher text with the key
         d = cipher_text ^ new_key
+
+        # convert the decrypted message to binary
         dec_message = str(decimalToBinary(d))
 
         return dec_message
-
-if __name__ == "__main__":        
-    # message = "1000101"
-    # n, k, l, g, p = 7, 16, 7, 21, 59
-
-    message = "10101001"
-    n, k, l, g, p = 8, 156, 8, 71, 599
-
-    eav = Eavesdrop(n,k,l,g,p)
-    print(eav.dec(eav.enc(message)) == message)

@@ -45,9 +45,10 @@ class CBC_MAC:
         n = self.security_parameter
         # step 1 : compute basic CBC-MAC t_1 using k_1 
 
-        # set initial t to be a string of n 0's
+        # get the number of blocks
         d = len(message) // n
         
+        # set initial t to be a string of n 0's
         t = "0" * n
 
         for i in range(d):
@@ -75,25 +76,6 @@ class CBC_MAC:
         :param tag: t
         :type tag: int
         """
+        # compute the tag for the message and compare it with the given tag.
+        # if the computed tag is equal to the given tag, return True else False
         return self.mac(message) == tag
-
-
-if __name__ == "__main__":
-
-    # n, g, p, k1, k2 = 4, 35, 97, 14, 12
-    # message = "1010100101111"
-
-    # n, g, p, k1, k2 = 4, 144, 719, 11, 8
-    # message = "11011101011000111000"
-
-    # n, g, p, k1, k2 = 4, 67, 461, 5, 6
-    # message = "11100111"
-
-    n, g, p, k1, k2 = 4, 113, 227, 2, 7
-    message = "111010100101"
-
-    keys = [k1, k2]
-    cbc_mac = CBC_MAC(n, g, p, keys)
-
-    tag = cbc_mac.mac(message)
-    print("Tag: ", tag)

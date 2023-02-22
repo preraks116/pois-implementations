@@ -40,32 +40,18 @@ class PRF:
         """
         cur = self.key
         bit_x = decimalToBinary(x).zfill(self.security_parameter)
-        # print("bit_x is", bit_x)
-        # print("-----")
+
+        # iterating through the bits of x to compute the PRF
         for i in bit_x:
-            # print("i is", i)
             bin_cur = self.prg.generate(cur)
-            # print("bin cur is", bin_cur)
+            
             if i == '0':
-                # left 
+                # left side of the binary string is taken 
                 y = left_half(bin_cur)
-                #cur = binaryToDecimal(y)
-                # print("y is", y)
             else: 
-                # right
+                # right side of the binary string is taken
                 y = right_half(bin_cur)
-                #cur = binaryToDecimal(y)
-                # print("y is", y)
+
             cur = binaryToDecimal(y)
-            # print("-----")
+
         return cur
-
-
-if __name__ == "__main__":
-    # print(PRF(8, 36, 191, 150).evaluate(190))
-    print(PRF(12, 14, 79, 1389).evaluate(1780))
-
-
-    # print(PRG(12,11,29,33).generate(1058))
-
-    # print(PRF(8,191, 36, 150).evaluate(190))
