@@ -1,226 +1,29 @@
+import sys 
+import os
 from typing import Optional
 
-# Function to convert decimal to binary 
-def decimalToBinary(n):
-    return bin(n)[2:]
+curdir = os.path.dirname(os.path.abspath(__file__))
 
-# Function to convert binary to decimal
-def binaryToDecimal(binary):
-    return int(binary, 2)
+relative_path_1 = os.path.join(curdir, '../PRG')
+sys.path.append(relative_path_1)
 
-# One way function : DLP
-def dlp(g: int, x: int, p: int) -> int:
-    return pow(g, x, p)
+relative_path_2 = os.path.join(curdir, '../PRF')
+sys.path.append(relative_path_2)
 
-# Hard core predicate : MSB
-def msb(num):
-    return str(num)[0]
+relative_path_3 = os.path.join(curdir, '../CPA')
+sys.path.append(relative_path_3)
 
-def hcp(num,p):
-    if num < (p-1)/2:
-        return 0
-    else:
-        return 1 
+relative_path_4 = os.path.join(curdir, '../CBC_MAC')
+sys.path.append(relative_path_4)
 
-class PRG:
-    def __init__(self, security_parameter: int, generator: int,
-                 prime_field: int, expansion_factor: int):
-        """
-        Initialize values here
-        :param security_parameter: n (from 1ⁿ)
-        :type security_parameter: int
-        :param generator: g
-        :type generator: int
-        :param prime_field: p
-        :type prime_field: int
-        :param expansion_factor: l(n)
-        :type expansion_factor: int
-        """
-        self.security_parameter = security_parameter
-        self.generator = generator
-        self.prime_field = prime_field
-        self.expansion_factor = expansion_factor
-
-    def generate(self, seed: int) -> str:
-        """
-        Generate the pseudo-random bit-string from `seed`
-        :param seed: uniformly sampled seed
-        :type seed: int
-        """
-        extras = ""
-        cur = seed 
-        for i in range(self.expansion_factor):
-            cur = dlp(self.generator, cur, self.prime_field)
-            h = hcp(seed, self.prime_field)
-            seed = cur
-            extras += str(h)
-        return extras
-
-def left_half(x: str) -> str:
-    return x[:len(x)//2]
-
-def right_half(x: str) -> str:
-    return x[len(x)//2:]
-
-class PRF:
-    def __init__(self, security_parameter: int, generator: int,
-                 prime_field: int, key: int):
-        """
-        Initialize values here
-        :param security_parameter: 1ⁿ
-        :type security_parameter: int
-        :param generator: g
-        :type generator: int
-        :param prime_field: p
-        :type prime_field: int
-        :param key: k, uniformly sampled key
-        :type key: int
-        """
-        self.security_parameter = security_parameter
-        self.generator = generator
-        self.prime_field = prime_field
-        self.key = key
-        self.prg = PRG(security_parameter, generator, prime_field, 2*security_parameter)
-
-    def evaluate(self, x: int) -> int:
-        """
-        Evaluate the pseudo-random function at `x`
-        :param x: input for Fₖ
-        :type x: int
-        """
-        cur = self.key
-        bit_x = decimalToBinary(x).zfill(self.security_parameter)
-        for i in bit_x:
-            bin_cur = self.prg.generate(cur)
-            if i == '0':
-                y = left_half(bin_cur)
-            else: 
-                y = right_half(bin_cur)
-            cur = binaryToDecimal(y)
-        return cur
-
-class CPA:
-    def __init__(self, security_parameter: int, prime_field: int,
-                 generator: int, key: int, mode="CTR"):
-        """
-        Initialize the values here
-        :param security_parameter: 1ⁿ
-        :type security_parameter: int
-        :param prime_field: q
-        :type prime_field: int
-        :param generator: g
-        :type generator: int
-        :param key: k
-        :type key: int
-        :param mode: Block-Cipher mode of operation
-            - CTR
-            - OFB
-            - CBC
-        :type mode: str
-        """
-        self.security_parameter = security_parameter
-        self.prime_field = prime_field
-        self.generator = generator
-        self.key = key
-        self.mode = mode
-        self.prf = PRF(security_parameter, generator, prime_field, key)
-
-    def blockEval(self, message: str, random_seed: int) -> str:
-        output = ""
-        for i in range(0, len(message), self.security_parameter):
-            block = message[i:i+self.security_parameter]
-            deci_block = binaryToDecimal(block)
-
-            r_i = random_seed + 1 + (i)//self.security_parameter 
-            prf_output = self.prf.evaluate(r_i)
-
-            out = deci_block ^ prf_output
-
-            enc_block = decimalToBinary(out).zfill(self.security_parameter)
-            output += enc_block
-        return output
-
-    def enc(self, message: str, random_seed: int) -> str:
-        """
-        Encrypt message against Chosen Plaintext Attack using randomized ctr mode
-        :param message: m
-        :type message: int
-        :param random_seed: ctr
-        :type random_seed: int
-        """
-        # convert the random seed to binary 
-        r = decimalToBinary(random_seed).zfill(self.security_parameter)
-
-        enc_message = self.blockEval(message, random_seed)
-
-        output = r + enc_message
-        return output
-
-    def dec(self, cipher: str) -> str:
-        """
-        Decrypt ciphertext to obtain plaintext message
-        :param cipher: ciphertext c
-        :type cipher: str
-        """
-        r = cipher[:self.security_parameter]
-        enc_message = cipher[self.security_parameter:]
-
-        # evaluating in blocks
-        dec_message = self.blockEval(enc_message, binaryToDecimal(r))
-        return dec_message
-
-class CBC_MAC:
-    def __init__(self, security_parameter: int, generator: int,
-                 prime_field: int, keys: list[int]):
-        """
-        Initialize the values here
-        :param security_parameter: 1ⁿ
-        :type security_parameter: int
-        :param generator: g
-        :type generator: int
-        :param prime_field: q
-        :type prime_field: int
-        :param keys: k₁, k₂
-        :type keys: list[int]
-        """
-        self.security_parameter = security_parameter
-        self.generator = generator
-        self.prime_field = prime_field
-        self.keys = keys
-        self.prf_1 = PRF(security_parameter, generator, prime_field, keys[0])
-        self.prf_2 = PRF(security_parameter, generator, prime_field, keys[1])
-
-    def mac(self, message: str) -> int:
-        """
-        Message Authentication code for message
-        :param message: message encoded as bit-string m
-        :type message: str
-        """
-        n = self.security_parameter
-        d = len(message) // n
-        t = "0" * n
-
-        for i in range(d):
-            m = message[i*n:(i+1)*n]
-            deci_t = binaryToDecimal(t)
-            m = binaryToDecimal(m)
-            t = self.prf_1.evaluate(deci_t ^ m)
-            t = decimalToBinary(t)
-    
-        t_1 = t
-        t = self.prf_2.evaluate(binaryToDecimal(t_1))
-
-        return t
-
-    def vrfy(self, message: str, tag: int) -> bool:
-        """
-        Verify if the tag commits to the message
-        :param message: m
-        :type message: str
-        :param tag: t
-        :type tag: int
-        """
-        return (self.mac(message) == tag)
+from PRG import PRG
+from PRG import *
+from PRF import PRF
+from PRF import *
+from CPA import CPA
+from CPA import *
+from CBC_MAC import CBC_MAC
+from CBC_MAC import *
 
 class CCA:
     def __init__(self, security_parameter: int, prime_field: int,

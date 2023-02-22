@@ -54,4 +54,5 @@ class PRG:
             extras += str(h)
         return extras
 
-print(PRG(12,11,29,33).generate(1058))
+if __name__ == "__main__":
+    print(PRG(12,11,29,33).generate(1058))

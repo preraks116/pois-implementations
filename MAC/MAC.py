@@ -1,101 +1,18 @@
-# Function to convert decimal to binary 
-def decimalToBinary(n):
-    return bin(n)[2:]
+import sys 
+import os
 
-# Function to convert binary to decimal
-def binaryToDecimal(binary):
-    return int(binary, 2)
+curdir = os.path.dirname(os.path.abspath(__file__))
 
-# One way function : DLP
-def dlp(g: int, x: int, p: int) -> int:
-    return pow(g, x, p)
+relative_path_1 = os.path.join(curdir, '../PRG')
+sys.path.append(relative_path_1)
 
-# Hard core predicate : MSB
-def msb(num):
-    return str(num)[0]
+relative_path_2 = os.path.join(curdir, '../PRF')
+sys.path.append(relative_path_2)
 
-def hcp(num,p):
-    if num < (p-1)/2:
-        return 0
-    else:
-        return 1 
-
-class PRG:
-    def __init__(self, security_parameter: int, generator: int,
-                 prime_field: int, expansion_factor: int):
-        """
-        Initialize values here
-        :param security_parameter: n (from 1ⁿ)
-        :type security_parameter: int
-        :param generator: g
-        :type generator: int
-        :param prime_field: p
-        :type prime_field: int
-        :param expansion_factor: l(n)
-        :type expansion_factor: int
-        """
-        self.security_parameter = security_parameter
-        self.generator = generator
-        self.prime_field = prime_field
-        self.expansion_factor = expansion_factor
-
-    def generate(self, seed: int) -> str:
-        """
-        Generate the pseudo-random bit-string from `seed`
-        :param seed: uniformly sampled seed
-        :type seed: int
-        """
-        extras = ""
-        cur = seed 
-        for i in range(self.expansion_factor):
-            cur = dlp(self.generator, cur, self.prime_field)
-            h = hcp(seed, self.prime_field)
-            seed = cur
-            extras += str(h)
-        return extras
-
-def left_half(x: str) -> str:
-    return x[:len(x)//2]
-
-def right_half(x: str) -> str:
-    return x[len(x)//2:]
-
-class PRF:
-    def __init__(self, security_parameter: int, generator: int,
-                 prime_field: int, key: int):
-        """
-        Initialize values here
-        :param security_parameter: 1ⁿ
-        :type security_parameter: int
-        :param generator: g
-        :type generator: int
-        :param prime_field: p
-        :type prime_field: int
-        :param key: k, uniformly sampled key
-        :type key: int
-        """
-        self.security_parameter = security_parameter
-        self.generator = generator
-        self.prime_field = prime_field
-        self.key = key
-        self.prg = PRG(security_parameter, generator, prime_field, 2*security_parameter)
-
-    def evaluate(self, x: int) -> int:
-        """
-        Evaluate the pseudo-random function at `x`
-        :param x: input for Fₖ
-        :type x: int
-        """
-        cur = self.key
-        bit_x = decimalToBinary(x).zfill(self.security_parameter)
-        for i in bit_x:
-            bin_cur = self.prg.generate(cur)
-            if i == '0':
-                y = left_half(bin_cur)
-            else: 
-                y = right_half(bin_cur)
-            cur = binaryToDecimal(y)
-        return cur
+from PRG import PRG
+from PRG import *
+from PRF import PRF
+from PRF import *
 
 class MAC:
     def __init__(self, security_parameter: int, prime_field: int,
@@ -168,23 +85,23 @@ class MAC:
         
         return (tag == tag_prime)
 
+if __name__ == "__main__":
+    # n, p, g, s = 16, 499, 145, 179
+    # message = "100001011111"
+    # r = 13
+    # tag = "1101000000000000000000000000000000000000000000000000"
 
-# n, p, g, s = 16, 499, 145, 179
-# message = "100001011111"
-# r = 13
-# tag = "1101000000000000000000000000000000000000000000000000"
+    # n, p, g, s = 12, 107, 39, 120
+    # message = "110101"
+    # r = 2
+    # tag = "010111101010000000001100101"
 
-# n, p, g, s = 12, 107, 39, 120
-# message = "110101"
-# r = 2
-# tag = "010111101010000000001100101"
-
-n, p, g, s = 20, 137, 45, 87
-message = "010011001000110"
-r = 7
-tag = "00111110100000000111010001100010110101110100110000011101000000001"
+    n, p, g, s = 20, 137, 45, 87
+    message = "010011001000110"
+    r = 7
+    tag = "00111110100000000111010001100010110101110100110000011101000000001"
 
 
-mac = MAC(n, p, g, s)
-print(mac.mac(message, r) == tag)
-print(mac.vrfy(message, tag))
+    mac = MAC(n, p, g, s)
+    print(mac.mac(message, r) == tag)
+    print(mac.vrfy(message, tag))
