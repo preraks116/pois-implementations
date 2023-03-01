@@ -11,9 +11,8 @@ sys.path.append(relative_path_2)
 
 
 from PRG import PRG
-from PRG import *
+from PRG import Convert
 from PRF import PRF
-from PRF import *
 
 class CPA:
     def __init__(self, security_parameter: int, prime_field: int,
@@ -39,32 +38,17 @@ class CPA:
         self.generator = generator
         self.key = key
         self.mode = mode
-        self.prf = PRF(security_parameter, generator, prime_field, key)
+        self.PRF = PRF(security_parameter, generator, prime_field, key)
 
-    def blockEval(self, message: str, random_seed: int) -> str:
+    def XOR_blocks(self, message: str, random_seed: int) -> str:
         """
         Evaluates the message in blocks of security parameter
         """
         output = ""
         for i in range(0, len(message), self.security_parameter):
-            # extracting ith message block
-            block = message[i:i+self.security_parameter]
-            deci_block = binaryToDecimal(block)
-
-            # calculating the value of the random counter which will be the seed for the PRF
-            r_i = random_seed + 1 + (i)//self.security_parameter 
-
-            # evaluating the PRF
-            prf_output = self.prf.evaluate(r_i)
-
-            # XORing the block with the output of the PRF
-            out = deci_block ^ prf_output
-
-            # converting the output to binary
-            enc_block = decimalToBinary(out).zfill(self.security_parameter)
-            
-            # appending the block to the output
-            output += enc_block
+            ctr = random_seed + 1 + (i)//self.security_parameter
+            xor_block = Convert.XOR(Convert.toDecimal(message[i:i+self.security_parameter]), self.PRF.evaluate(ctr))
+            output += Convert.toBinary(xor_block).zfill(self.security_parameter)
         return output
 
     def enc(self, message: str, random_seed: int) -> str:
@@ -75,14 +59,7 @@ class CPA:
         :param random_seed: ctr
         :type random_seed: int
         """
-        # convert the random seed to binary 
-        r = decimalToBinary(random_seed).zfill(self.security_parameter)
-
-        # using the blockEval function to evaluate the message in blocks
-        enc_message = self.blockEval(message, random_seed)
-
-        output = r + enc_message
-        return output
+        return Convert.toBinary(random_seed).zfill(self.security_parameter) + self.XOR_blocks(message, random_seed)
 
     def dec(self, cipher: str) -> str:
         """
@@ -90,13 +67,10 @@ class CPA:
         :param cipher: ciphertext c
         :type cipher: str
         """
-        # extracting the random seed from the cipher
-        r = cipher[:self.security_parameter]
+        random_seed, ciphertext = cipher[:self.security_parameter], cipher[self.security_parameter:]
+        return self.blockEval(ciphertext, Convert.toDecimal(random_seed))
 
-        # extracting the encrypted message from the cipher
-        enc_message = cipher[self.security_parameter:]
-
-        # evaluating in blocks
-        dec_message = self.blockEval(enc_message, binaryToDecimal(r))
-        
-        return dec_message
+if "__main__" == __name__:
+    enc = "01001100100011100100"
+    print(CPA(4, 307, 112, 58).enc("1010100011100111", 4))
+    print(enc)

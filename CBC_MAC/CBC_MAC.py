@@ -11,9 +11,8 @@ sys.path.append(relative_path_2)
 
 
 from PRG import PRG
-from PRG import *
+from PRG import Convert
 from PRF import PRF
-from PRF import *
 
 class CBC_MAC:
     def __init__(self, security_parameter: int, generator: int,
@@ -33,8 +32,8 @@ class CBC_MAC:
         self.generator = generator
         self.prime_field = prime_field
         self.keys = keys
-        self.prf_1 = PRF(security_parameter, generator, prime_field, keys[0])
-        self.prf_2 = PRF(security_parameter, generator, prime_field, keys[1])
+        self.F_k_1 = PRF(security_parameter, generator, prime_field, keys[0])
+        self.F_k_2 = PRF(security_parameter, generator, prime_field, keys[1])
 
     def mac(self, message: str) -> int:
         """
@@ -42,31 +41,12 @@ class CBC_MAC:
         :param message: message encoded as bit-string m
         :type message: str
         """
-        n = self.security_parameter
-        # step 1 : compute basic CBC-MAC t_1 using k_1 
-
-        # get the number of blocks
-        d = len(message) // n
-        
-        # set initial t to be a string of n 0's
-        t = "0" * n
-
-        for i in range(d):
-            # get the i-th block of message
-            m = message[i*n:(i+1)*n]
-            # convert t and m to decimal
-            deci_t = binaryToDecimal(t)
-            m = binaryToDecimal(m)
-            # compute t = F_k1(t xor m)
-            t = self.prf_1.evaluate(deci_t ^ m)
-            # convert t to binary
-            t = decimalToBinary(t)
-    
-        t_1 = t
-        # step 2 : compute output MAC tag t = F_k2(t_1)
-        t = self.prf_2.evaluate(binaryToDecimal(t_1))
-
-        return t
+        t_1 = "0" * self.security_parameter
+        for i in range(len(message) // self.security_parameter):
+            block = Convert.toDecimal(message[i*self.security_parameter:(i+1)*self.security_parameter])
+            xor_block = Convert.XOR(Convert.toDecimal(t_1), block)
+            t_1 = Convert.toBinary(self.F_k_1.evaluate(xor_block))    
+        return self.F_k_2.evaluate(Convert.toDecimal(t_1))
 
     def vrfy(self, message: str, tag: int) -> bool:
         """
@@ -76,6 +56,4 @@ class CBC_MAC:
         :param tag: t
         :type tag: int
         """
-        # compute the tag for the message and compare it with the given tag.
-        # if the computed tag is equal to the given tag, return True else False
         return self.mac(message) == tag

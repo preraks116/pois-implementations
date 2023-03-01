@@ -17,13 +17,10 @@ relative_path_4 = os.path.join(curdir, '../CBC_MAC')
 sys.path.append(relative_path_4)
 
 from PRG import PRG
-from PRG import *
+from PRG import Convert
 from PRF import PRF
-from PRF import *
 from CPA import CPA
-from CPA import *
 from CBC_MAC import CBC_MAC
-from CBC_MAC import *
 
 class CCA:
     def __init__(self, security_parameter: int, prime_field: int,
@@ -64,17 +61,7 @@ class CCA:
         :param cpa_random_seed: random seed for CPA encryption
         :type cpa_random_seed: int
         """
-        
-        # encrypt the message using cpa_random_seed
-        enc_message = self.cpa.enc(message, cpa_random_seed)
-
-        # compute the mac of the encrypted message
-        tag = self.cbc_mac.mac(enc_message)
-
-        # convert the tag to binary to append at the end
-        bin_tag = decimalToBinary(tag).zfill(self.security_parameter)
-
-        return enc_message + bin_tag
+        return self.cpa.enc(message, cpa_random_seed) + Convert.toBinary(self.cbc_mac.mac(self.cpa.enc(message, cpa_random_seed))).zfill(self.security_parameter)
 
     def dec(self, cipher: str) -> Optional[str]:
         """
@@ -82,14 +69,8 @@ class CCA:
         :param cipher: <c, t>
         :type cipher: str
         """
-        # separate the cipher and tag
-        enc_message, bin_tag = cipher[:-self.security_parameter], cipher[-self.security_parameter:]
-        tag = binaryToDecimal(bin_tag)
-        
-        # verify the tag
-        if self.cbc_mac.vrfy(enc_message, tag):
-            # decrypt the message
-            message = self.cpa.dec(enc_message)
-            return message
+        ciphertext, tag = cipher[:-self.security_parameter], Convert.toDecimal(cipher[-self.security_parameter:])
+        if self.cbc_mac.vrfy(ciphertext, tag):
+            return self.cpa.dec(ciphertext)
         else:
             return None

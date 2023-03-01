@@ -1,24 +1,19 @@
 import sys 
 import os
-curdir = os.path.dirname(os.path.abspath(__file__))
-relative_path = os.path.join(curdir, '../PRG')
+tdir = os.path.dirname(os.path.abspath(__file__))
+relative_path = os.path.join(tdir, '../PRG')
 sys.path.append(relative_path)
+
 from PRG import PRG
-from PRG import *
-
-def left_half(x: str) -> str:
-    return x[:len(x)//2]
-
-def right_half(x: str) -> str:
-    return x[len(x)//2:]
+from PRG import Convert
 
 class PRF:
-    def __init__(self, security_parameter: int, generator: int,
+    def __init__(self, setity_parameter: int, generator: int,
                  prime_field: int, key: int):
         """
         Initialize values here
-        :param security_parameter: 1ⁿ
-        :type security_parameter: int
+        :param setity_parameter: 1ⁿ
+        :type setity_parameter: int
         :param generator: g
         :type generator: int
         :param prime_field: p
@@ -26,11 +21,17 @@ class PRF:
         :param key: k, uniformly sampled key
         :type key: int
         """
-        self.security_parameter = security_parameter
+        self.setity_parameter = setity_parameter
         self.generator = generator
         self.prime_field = prime_field
         self.key = key
-        self.prg = PRG(security_parameter, generator, prime_field, 2*security_parameter)
+        self.prg = PRG(setity_parameter, generator, prime_field, 2*setity_parameter)
+
+    def getRightHalf(self, x: str) -> str:
+        return x[len(x)//2:]
+    
+    def getLeftHalf(self, x: str) -> str:
+        return x[:len(x)//2]
 
     def evaluate(self, x: int) -> int:
         """
@@ -38,20 +39,15 @@ class PRF:
         :param x: input for Fₖ
         :type x: int
         """
-        cur = self.key
-        bit_x = decimalToBinary(x).zfill(self.security_parameter)
+        t = self.key
+        for i in Convert.toBinary(x).zfill(self.setity_parameter):
+            F_k_x = self.prg.generate(t)
+            t = Convert.toDecimal(self.getRightHalf(F_k_x) if i == '1' else self.getLeftHalf(F_k_x))
+        return t
 
-        # iterating through the bits of x to compute the PRF
-        for i in bit_x:
-            bin_cur = self.prg.generate(cur)
-            
-            if i == '0':
-                # left side of the binary string is taken 
-                y = left_half(bin_cur)
-            else: 
-                # right side of the binary string is taken
-                y = right_half(bin_cur)
-
-            cur = binaryToDecimal(y)
-
-        return cur
+if "__main__" == __name__:
+    print(PRF(8,36,191,150).evaluate(190))
+    print(PRF(8,45,137,129).evaluate(201))
+    print(PRF(10,71,179,568).evaluate(890))
+    print(PRF(11,44,107,1056).evaluate(1300))
+    print(PRF(12,14,79,1389).evaluate(1780))

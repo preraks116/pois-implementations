@@ -10,9 +10,8 @@ relative_path_2 = os.path.join(curdir, '../PRF')
 sys.path.append(relative_path_2)
 
 from PRG import PRG
-from PRG import *
+from PRG import Convert
 from PRF import PRF
-from PRF import *
 
 class MAC:
     def __init__(self, security_parameter: int, prime_field: int,
@@ -33,6 +32,7 @@ class MAC:
         self.generator = generator
         self.seed = seed
         self.prf = PRF(security_parameter, generator, prime_field, seed)
+        self.n_dash = security_parameter // 4
 
     def mac(self, message: str, random_identifier: int) -> str:
         """
@@ -42,32 +42,14 @@ class MAC:
         :param message: message encoded as bit-string
         :type message: str
         """
-        n_dash = self.security_parameter//4
-
-        d = len(message) // (n_dash)
-
-        bin_d = decimalToBinary(d).zfill(n_dash)
-        bin_r = decimalToBinary(random_identifier).zfill(n_dash)
-
-        # for i = 1 to d, compute the t_i = F_k( r || d || i || m_i ) where || denotes concatenation
-        t = []
-        for i in range(d):
-            bin_i = decimalToBinary(i+1).zfill(n_dash)
-            # getting the message block
-            block = message[i*(n_dash):(i+1)*(n_dash)]
-
-            x = binaryToDecimal(bin_r + bin_d + bin_i + block)
-            # calculating t_i
-            t_i = self.prf.evaluate(x)
-
-            # appending t_i to the list of tags
-            t.append(t_i)
-
-        # concatenate r and all the t_i's to form t 
-        tag = bin_r + ''.join([decimalToBinary(i).zfill(self.security_parameter) for i in t])
-        return tag
-
-
+        num_blocks = len(message) // (self.n_dash)
+        d, r = Convert.toBinary(len(message) // (self.n_dash)).zfill(self.n_dash), Convert.toBinary(random_identifier).zfill(self.n_dash)
+        t = ""
+        for i in range(0, num_blocks):
+            bin_i, block = Convert.toBinary(i+1).zfill(self.n_dash), message[i*(self.n_dash):(i+1)*(self.n_dash)]
+            t_i = self.prf.evaluate(Convert.toDecimal(r + d + bin_i + block))
+            t += Convert.toBinary(t_i).zfill(self.security_parameter)
+        return r + t
 
     def vrfy(self, message: str, tag: str) -> bool:
         """
@@ -77,14 +59,13 @@ class MAC:
         :param tag: t
         :type tag: str
         """
-        pass
-        n_dash = self.security_parameter//4
+        random_seed = tag[:self.n_dash]
+        return (tag == self.mac(message, Convert.toDecimal(random_seed)))
 
-        # extract random seed from the tag
-        r = tag[:n_dash]
 
-        # getting the tag of the input message with the same random seed
-        tag_prime = self.mac(message, binaryToDecimal(r))
-        
-        # if the tags are same return true else return false
-        return (tag == tag_prime)
+if "__main__" == __name__:
+    n, p, g, s, r = 28, 617, 150, 123, 2
+    mac = "111011101100101001110"
+    message = "0000010100010001000100010001000100011110000010011011000100010001111000001001101100010001000"
+    x = MAC(n, p, g, s)
+    print(MAC(n,p,g,s).vrfy(message, x.mac(message, r)))
